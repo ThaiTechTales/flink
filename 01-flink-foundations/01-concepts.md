@@ -513,6 +513,27 @@ ON a.user_id = b.user_id;
 
 Flink may need to remember huge amounts of unmatched data waiting for future joins. Bad joins can destroy clusters.
 
+### Backpressure
+
+Backpressure occurs when a downstream operator cannot keep up with the rate of events produced by an upstream operator. Rather than dropping events, Flink propagates pressure back through the pipeline, slowing the source to match what downstream can handle.
+
+In other words, backpressure is a natural flow control mechanism in Flink. It signals that the system is overwhelmed and needs to slow down. Ignoring backpressure can lead to cascading failures and out-of-memory errors. Properly handling backpressure is critical for building robust streaming applications.
+
+![](./99-diagrams/01-concepts/backpressure-01.png)
+
+Analogy #1: Imagine a water pipe system. If the pipe narrows at some point, water will back up behind it. The flow slows down to prevent overflow. This is like backpressure in Flink.
+
+Analogy #2: Imagine a restaurant kitchen. If the chef is overwhelmed with orders, they will ask the waiter to slow down taking new orders until they catch up. This is like backpressure in Flink.
+
+| Cause | Effect |
+| --- | --- |
+| Slow operator | Upstream queue fills up |
+| Large state | Processing slows down |
+| Insufficient parallelism | Tasks become bottlenecks |
+| Expensive computation | Throughput drops |
+
+Backpressure is not always a problem — it is a signal. Sustained backpressure indicates that the job needs more parallelism, a faster operator implementation, or state size reduction. Ignoring it leads to cascading delays and eventually out-of-memory failures.
+
 ### Checkpointing
 
 Flink periodically snapshots state. If a machine fails, Flink can restore from the last checkpoint. This is critical for reliability. Checkpointing allows Flink to provide exactly-once processing guarantees even in the face of failures.
@@ -529,25 +550,51 @@ This is how Flink achieves fault tolerance.
 
 ### Exactly-once processing
 
-This is one of Flink’s biggest selling points.
+Exactly-once processing is a core Flink guarantee: **every event updates the final state exactly one time, no more and no less.**
 
-Exactly-once means: Every event affects final state exactly once.
+In other words:
 
-Not:
+- Not zero times (no events are lost)
+- Not twice (no duplicates are counted)
+- Not inconsistently (all outcomes are deterministic)
 
-- zero times
-- twice
-- inconsistently
+Most distributed systems struggle to provide this guarantee. Exactly-once requires three components working together:
 
-This is extremely hard in distributed systems.
+| Component | Purpose |
+| --- | --- |
+| Checkpoints | Snapshot state at consistent points in time |
+| Source replay | Kafka can re-read events from any offset |
+| Transactional sinks | Results are written atomically, all-or-nothing |
 
-Flink combines:
+Together, these components ensure that if a machine fails mid-processing, recovery produces the exact same results as if no failure had occurred.
 
-- checkpoints
-- source replay
-- transactional sinks
+### Watermarks
 
-to achieve this.
+Watermarks are Flink's mechanism for tracking progress in event time. Because events can arrive late or out of order, Flink cannot know when all events for a given time period have arrived. Watermarks solve this by asserting: *all events up to this point in event time have now arrived.*
+
+Analogy #1: Imagine you are waiting for all the guests to arrive before starting a party game. You don't know when the last guest will show up, but you can set a rule: "Once I haven't seen any new guests for 5 minutes, I'll assume everyone has arrived and start the game." That 5-minute mark is like a watermark in Flink.
+
+Analogy #2: Imagine you are tracking user sessions on a website. You want to know when a session has ended so you can calculate how long it lasted. However, users may be inactive for a while before they return or leave. You could set a rule: "If I haven't seen any activity from this user for 30 minutes, I'll consider the session ended." That 30-minute threshold is like a watermark in Flink.
+
+| Concept | Explanation |
+| --- | --- |
+| Event time | The timestamp embedded in the event itself |
+| Processing time | The wall-clock time when Flink processes the event |
+| Watermark | A signal that event time has advanced to a certain point |
+| Late events | Events that arrive after the watermark has passed their timestamp |
+
+![](./99-diagrams/01-concepts/watermarks-01.png)
+![](./99-diagrams/01-concepts/watermarks-02.png)
+
+For example, if a watermark of `10:00:05` is emitted, Flink considers all windows ending before `10:00:05` as complete and triggers their computation. Events arriving after the watermark with an earlier timestamp are treated as late and handled according to the configured late data policy.
+
+Without watermarks:
+
+- time windows would never close
+- aggregations would never complete
+- results would be indefinitely delayed
+
+Watermarks are the foundation of correct event-time processing in Flink.
 
 ## Real production architecture example
 
@@ -586,30 +633,14 @@ This is exactly the type of environment where Flink shines.
 | Flink                              | Processes, joins, filters, enriches, aggregates, and transforms streams in real time |
 | BigQuery, API, Salesforce, Pub/Sub | External systems connected to Kafka
 
-## Common misconceptions beginners have
+## Common Misconceptions
 
-**Misconception 1: Kafka processes data**
-
-Wrong. Kafka stores and transports data. Flink processes data.
-
-**Misconception 2: Flink is just SQL**
-
-Wrong. SQL is only one interface. Flink itself is a distributed execution engine.
-
-**Misconception 3: Streaming is just faster batch**
-
-Wrong. Streaming introduces fundamentally different challenges:
-
-- infinite data
-- partial information
-- time semantics
-- state management
-- backpressure
-- event disorder
-
-**Misconception 4: Queries always finish**
-
-Wrong. Streaming queries may run forever.
+| Misconception | Reality |
+| --- | --- |
+| Kafka processes data | Kafka stores and transports data. Flink processes data. |
+| Flink is just SQL | SQL is one interface. Flink itself is a distributed execution engine. |
+| Streaming is just faster batch | Streaming introduces fundamentally different challenges: infinite data, partial information, time semantics, state management, backpressure, and event disorder. |
+| Queries always finish | Streaming queries may run forever. |
 
 ## Mental Model
 

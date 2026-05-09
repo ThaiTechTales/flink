@@ -438,7 +438,6 @@ docker compose down -v
 
 This provides a clean environment for the next run and avoids accidental reuse of old checkpoint data.
 
-
 ## Glossary
 
 | Concept               | Observed behavior                   |

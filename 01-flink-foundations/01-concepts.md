@@ -4,7 +4,7 @@
 
 Before understanding Apache Flink, it's important to understand the problem space it was designed for. Traditional systems were built around batch processing. For decades, most companies worked like this:
 
-![Batch processing diagram showing data being collected, stored, and processed in batches](./99-diagrams/problem-01.png)
+![Batch processing diagram showing data being collected, stored, and processed in batches](./99-diagrams/01-concepts/problem-01.png)
 
 This model worked because businesses could tolerate delay.
 
@@ -46,10 +46,10 @@ Flink was built for systems where data never stops arriving. It processes data a
 Stream processing means processing events continuously as they happen.
 
 Instead of waiting for a full dataset:
-![Stream processing diagram showing data being processed as it arrives](./99-diagrams/stream-processing-01.png)
+![Stream processing diagram showing data being processed as it arrives](./99-diagrams/01-concepts/stream-processing-01.png)
 
 Stream processing continuously reacts to incoming events:
-![Stream processing diagram showing data being processed as it arrives, with state and windows](./99-diagrams/stream-processing-02.png)
+![Stream processing diagram showing data being processed as it arrives, with state and windows](./99-diagrams/01-concepts/stream-processing-02.png)
 
 This sounds simple initially. In reality, it is extremely difficult. Because real systems have:
 
@@ -84,7 +84,7 @@ Examples:
 
 One machine cannot process this reliably forever. Flink distributes work across a cluster.
 
-![Flink distributed architecture](./99-diagrams/flink-distributed-01.png)
+![Flink distributed architecture](./99-diagrams/01-concepts/flink-distributed-01.png)
 
 | Component   | Purpose                              |
 | ----------- | ------------------------------------ |
@@ -285,7 +285,7 @@ Kafka stores streams. Flink processes streams. Think of Kafka as the source of t
 
 This is the architecture you will see almost everywhere.
 
-![Modern streaming architecture diagram showing Kafka, Kafka Connect, Flink, and external systems](./99-diagrams/modern-architecture-01.png)
+![Modern streaming architecture diagram showing Kafka, Kafka Connect, Flink, and external systems](./99-diagrams/01-concepts/modern-architecture-01.png)
 
 Explanation of the architecture
 
@@ -380,7 +380,7 @@ Flink was designed deeply around event-time correctness.
 
 ## What is Flink SQL?
 
-![Modern streaming architecture diagram showing Kafka, Kafka Connect, Flink, and external systems](./99-diagrams/what-is-flink-01.png)
+![Modern streaming architecture diagram showing Kafka, Kafka Connect, Flink, and external systems](./99-diagrams/01-concepts/what-is-flink-01.png)
 
 **Process Functions**
 
@@ -517,7 +517,7 @@ Flink may need to remember huge amounts of unmatched data waiting for future joi
 
 Flink periodically snapshots state. If a machine fails, Flink can restore from the last checkpoint. This is critical for reliability. Checkpointing allows Flink to provide exactly-once processing guarantees even in the face of failures.
 
-![Modern streaming architecture diagram showing Kafka, Kafka Connect, Flink, and external systems](./99-diagrams/snapshot-01.png)
+![Modern streaming architecture diagram showing Kafka, Kafka Connect, Flink, and external systems](./99-diagrams/01-concepts/snapshot-01.png)
 
 If Flink crashes:
 
@@ -551,7 +551,7 @@ to achieve this.
 
 ## Real production architecture example
 
-![Real production architecture diagram](./99-diagrams/real-production-01.png).
+![Real production architecture diagram](./99-diagrams/01-concepts/real-production-01.png).
 
 **Flink can:**
 
@@ -613,11 +613,10 @@ Wrong. Streaming queries may run forever.
 
 ## Mental Model
 
-![](./99-diagrams/mental-model-01.png)
-
+![](./99-diagrams/01-concepts/mental-model-01.png)
 Workflow of a streaming application
 
-![](./99-diagrams/mental-model-02.png)
+![](./99-diagrams/01-concepts/mental-model-02.png)
 
 Flink is fundamentally:
 

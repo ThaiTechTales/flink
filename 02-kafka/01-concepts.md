@@ -48,7 +48,14 @@ Each event is written sequentially and assigned an ever-increasing position call
 
 ![](./99-diagrams/01-concepts/append-only-01.png)
 
-Unlike traditional databases that frequently modify rows in place, Kafka optimises for sequential writes. This design is one of Kafka’s greatest engineering strengths because sequential disk operations are extremely fast and highly scalable.
+Kafka avoids expensive random writes by using an append-only model. Instead of modifying existing records, Kafka simply appends new records to the end of the log. This design allows Kafka to achieve high throughput and low latency, making it ideal for handling large volumes of streaming data.
+
+```text
+append
+append
+append
+append
+```
 
 The append-only model enables several critical capabilities:
 
@@ -60,6 +67,20 @@ The append-only model enables several critical capabilities:
 | Scalability     | Partitions can distribute logs across brokers |
 | Fault tolerance | Replicated logs protect against failures      |
 
+### Event
+
+An event is a record of something that happened. It represents a change in state or an occurrence in the real world. In Kafka, events are the fundamental units of data that producers write to topics and consumers read from topics.
+
+| Domain     | Example event              |
+| ---------- | -------------------------- |
+| Banking    | Payment processed          |
+| Healthcare | Heart rate changed         |
+| Retail     | Order submitted            |
+| Gaming     | Player joined              |
+| Logistics  | Package scanned            |
+| IoT        | Sensor temperature updated |
+
+
 ### Event Replay
 
 The append-only log allows consumers to replay events by simply re-reading from a specific offset. This is crucial for fault tolerance and state recovery in Flink. If a Flink job fails, it can restart and reprocess events from the last checkpointed offset, ensuring no data is lost.
@@ -68,7 +89,7 @@ The append-only log allows consumers to replay events by simply re-reading from 
 
 In Kafka, once a record is written to a partition, it cannot be modified or deleted. This immutability ensures data integrity and simplifies the design of distributed systems. It also allows Kafka to efficiently manage storage and replication without worrying about concurrent updates.
 
-### Record
+## Record
 
 A record is what producers write to Kafka and what consumers read from Kafka. It contains the actual data payload (value) along with an optional key and metadata. It is the basic unit of data in Kafka. It consists of a key, a value, and metadata such as a timestamp and headers. Records are produced by producers and consumed by consumers. Each record is appended to the end of a partition log and assigned an offset. The offset is a unique identifier for the record within its partition and is used by consumers to track their position in the log.
 
@@ -79,6 +100,9 @@ A record is what producers write to Kafka and what consumers read from Kafka. It
 A Kafka topic is a named logical stream of records. It acts as the category (or feed) to which producers publish events and from which consumers read them. You can think of a topic as a dedicated channel for related events flowing continuously through Kafka. Topics are the core abstraction Kafka uses to organise and manage streaming data.
 
 ![](./99-diagrams/01-concepts/topics-01.png)
+Producers do not care who consumes data. Consumers do not care who produces data. This decoupling is a fundamental design principle of Kafka. It allows for flexible and scalable architectures where producers and consumers can evolve independently without tight coupling.
+
+![](./99-diagrams/01-concepts/topics-02.png)
 
 In the diagram, each topic groups together a specific category of events:
 
@@ -87,6 +111,17 @@ In the diagram, each topic groups together a specific category of events:
 | `website-clicks` | Stores website interaction events |
 | `payments`       | Stores payment-related events     |
 | `iot-sensors`    | Stores sensor telemetry           |
+
+## Decoupling
+
+Without Kafka topics, producers and consumers would have to be directly connected, leading to tight coupling and scalability issues. Kafka topics provide a clean abstraction that allows for flexible data flow and decoupling between producers and consumers.
+
+![](./99-diagrams/01-concepts/decoupling-01.png)
+
+With Kafka, systems become independent. Producers can write to topics without knowing who will consume the data, and consumers can read from topics without knowing who produced the data. This decoupling allows for greater flexibility and scalability in building streaming applications.
+
+![](./99-diagrams/01-concepts/decoupling-02.png)
+
 
 ## Producers
 
@@ -110,7 +145,15 @@ Consumers are applications that subscribe to Kafka topics and read events from t
 | Billing system     | Generate invoices          |
 | Analytics platform | Calculate revenue metrics  |
 
+### Consumers Group
+
+A consumer group is a collection of consumers that work together to consume events from a topic. Each consumer in the group reads from a subset of the partitions, allowing for parallel processing and load balancing. This enables horizontal scaling of consumers, as you can add more consumers to the group to handle increased load. Each partition is consumed by only one consumer in the group, ensuring that events are processed in order within each partition.
+
+![](./99-diagrams/01-concepts/consumers-01.png)
+
 ## Partitions
+
+A topic is split into one or more partitions, which are independent ordered logs. Each partition is an append-only sequence of records that can be read independently. Partitions allow Kafka to scale horizontally by distributing data across multiple brokers and enabling parallel processing by consumers.
 
 ### Offset
 
@@ -191,7 +234,6 @@ If related events were randomly distributed across partitions, event order could
 Kafka solves this by using the key to guarantee:
 
 ```Same key → same partition → preserved ordering```
-
 
 ### Partition Skew
 

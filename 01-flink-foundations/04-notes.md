@@ -2,7 +2,7 @@
 
 Apache Flink is a distributed stateful stream processing engine that continuously processes infinite event streams while maintaining correctness, scalability, and fault tolerance. Flink can use SQL as one of its interfaces.
 
-![](./99-diagrams/04-notes/flink-architecture-01.png)
+![](./99-diagrams/03-notes/flink-architecture-01.png)
 
 | Component | Core responsibility         |
 | --------- | --------------------------- |
@@ -18,11 +18,11 @@ Database and stream are two different paradigms for processing data.
 
 A database is a collection of data that is stored and organised in a way that allows for efficient retrieval and manipulation. 
 
-![](./99-diagrams/04-notes/database-01.png)
+![](./99-diagrams/03-notes/database-01.png)
 
 A stream, on the other hand, is a continuous flow of data that is generated in real-time and can be processed as it arrives and may never terminate.
 
-![](./99-diagrams/04-notes/streaming-01.png)
+![](./99-diagrams/03-notes/streaming-01.png)
 
 ## Dynamic Tables
 
@@ -40,7 +40,7 @@ A dynamic table is a table that can change over time. It is a logical representa
 
 A changelog is a record of all the changes that have been made to a dynamic table over time. It is used to track the history of the table and to understand how it has evolved. A changelog can be represented as a stream of events that describe the changes that have been made to the table.
 
-![](./99-diagrams/04-notes/changelog-01.png)
+![](./99-diagrams/03-notes/changelog-01.png)
 
 ## Stateless vs Stateful
 
@@ -84,7 +84,7 @@ Large state introduces:
 
 Checkpointing is a mechanism used in stream processing systems to periodically save the state of the application. This allows the application to recover from failures and continue processing from where it left off. Checkpointing is typically done by taking a snapshot of the state of the application at regular intervals and storing it in a durable storage system.
 
-![](./99-diagrams/04-notes/checkpointing-01.png)
+![](./99-diagrams/03-notes/checkpointing-01.png)
 
 If failure occurs:
 
@@ -116,7 +116,7 @@ This is extremely difficult in distributed systems. Flink achieves this through:
 
 Parallelism is the ability to process multiple events simultaneously. Flink achieves parallelism by partitioning the data and processing it across multiple tasks. Each task can run on a different machine, allowing for horizontal scaling.
 
-![](./99-diagrams/04-notes/parallelism-01.png)
+![](./99-diagrams/03-notes/parallelism-01.png)
 
 **Partitioning** allows Flink to distribute the workload across multiple tasks, enabling it to process large volumes of data efficiently. Each partition can be processed independently, allowing for high throughput and low latency.
 
@@ -147,7 +147,7 @@ Kafka Connect is a framework for moving data between Kafka and external systems.
 
 ### Why this architecture exists
 
-![](./99-diagrams/04-notes/connector-01.png)
+![](./99-diagrams/03-notes/connector-01.png)
 
 Separating data movement, storage, and computation into distinct layers keeps each concern independently scalable and operable.
 
@@ -168,11 +168,11 @@ This separation improves:
 ## Batch vs Stream
 Batch processing is a paradigm where data is processed in large, finite chunks. It is typically used for processing historical data or performing complex computations that can be done offline. Batch processing systems read data from a source, process it, and write the results to a sink.
 
-![](./99-diagrams/04-notes/batch-01.png)
+![](./99-diagrams/03-notes/batch-01.png)
 
 Stream processing, on the other hand, is a paradigm where data is processed in real-time as it arrives. It is typically used for processing continuous data streams or performing computations that require low latency. Stream processing systems read data from a source, process it, and write the results to a sink continuously.
 
-![](./99-diagrams/04-notes/streaming-02.png)
+![](./99-diagrams/03-notes/streaming-02.png)
 
 Challenges of stream processing:
 

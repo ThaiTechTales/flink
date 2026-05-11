@@ -12,6 +12,8 @@
 | Replayability   | Re-reading historical events      |
 | Retention       | Controls replay window            |
 | Partition skew  | Uneven workload distribution      |
+| Brokers          | Kafka servers hosting partitions |
+| Cluster          | Distributed system of brokers    |
 | Kafka Connect   | Integration framework             |
 | Kafka vs Flink  | Storage vs processing             |
 
@@ -253,7 +255,7 @@ Too few partitions can lead to bottlenecks because all records are funneled thro
 
 ![](./99-diagrams/01-concepts/brokers-01.png)
 
-A broker is a Kafka server that stores partitions and serves reads and writes for clients. A Kafka cluster is made up of multiple brokers working together.
+A broker is a Kafka **server** that stores partitions and serves reads and writes for clients. A Kafka cluster is made up of multiple brokers working together.
 
 When a topic has multiple partitions, Kafka distributes those partitions across brokers. This is what allows both horizontal scaling and fault tolerance.
 
@@ -271,6 +273,22 @@ So the relationship is:
 - topics are logical streams
 - partitions are the parallel units
 - brokers are the machines that host those partitions.
+
+## Cluster
+
+ A Kafka cluster is the overall distributed system made up of multiple brokers, where each broker is an individual Kafka server responsible for storing and serving data.
+ 
+ Within the cluster, data is organised into topics, which represent logical streams of events such as orders, payments, or user activity.
+ 
+ Each topic is further divided into partitions, which are the fundamental units of storage, scalability, and parallel processing in Kafka.
+ 
+ Partitions are distributed across brokers so that the workload and data storage can be shared throughout the cluster, enabling high throughput and fault tolerance.
+ 
+ Messages, also called records or events, are stored sequentially inside partitions, and Kafka guarantees message ordering only within a single partition.
+ 
+ In practice, topics are logical abstractions, while partitions are the actual distributed data structures physically hosted and replicated across brokers within the Kafka cluster.
+
+![](./99-diagrams/01-concepts/cluster-01.png)
 
 ## Retention
 

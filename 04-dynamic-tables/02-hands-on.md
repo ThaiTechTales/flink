@@ -711,9 +711,12 @@ docker compose down -v
 
 ## Key Takeaway
 
+![](./99-diagrams/02-hands-on/takeaway-01.png)
+
 | Query class | Typical sink requirement |
 | --- | --- |
 | Stateless append-only query | Insert-only sink is usually sufficient |
 | Stateful updating query | Changelog-aware/upsert-capable sink is usually required |
 
 This rule is a core design principle for production Flink SQL pipelines.
+

@@ -10,24 +10,22 @@
 
 ![](./99-diagrams/02-hands-on/overview-01.png)
 
-
-
 | Concept | Reality |
 | --- | --- |
-| Event-time order | NOT the same as chronological order |
-| Watermarks | Not guarantees, just heuristic estimates |
+| Event-time order | Not the same as chronological order |
+| Watermarks | Heuristic estimates, not guarantees |
 | Late events | Common and expected, not edge cases |
-| Window latency | Necessary for correctness |
-| Processing-time windows | Simple but incorrect |
-| Event-time windows | Complex but correct |
-| State growth | A real operational concern |
-| Trade-offs | Always: correctness vs latency |
+| Window latency | A necessary cost of correctness |
+| Processing-time windows | Simple but inaccurate |
+| Event-time windows | Correct but operationally complex |
+| State growth | A real production concern |
+| Trade-offs | Correctness vs latency |
 
 ---
 
 ## Step 1: Start the Streaming Platform
 
-Navigate to your Flink exercises directory:
+Navigate to the Flink exercises directory:
 
 ```bash
 cd learn-apache-flink-101-exercises-master
@@ -52,13 +50,13 @@ This starts:
 
 
 
-Verify everything is running:
+Verify all containers are running:
 
 ```bash
 docker ps
 ```
 
-You should see 4 containers in the `Up` state.
+4 containers should appear in the `Up` state.
 
 ---
 
@@ -70,19 +68,19 @@ Enter the Flink SQL interactive environment:
 docker compose run sql-client
 ```
 
-You'll see the prompt:
+The prompt appears as:
 
 ```
 Flink SQL> 
 ```
 
-This is your gateway to the streaming system. Every query here executes as a distributed stream processor, not a traditional database.
+Queries entered here execute as distributed stream jobs, not traditional database queries.
 
 ---
 
 ## Step 3: Create an Event-Time Source Table
 
-Paste this SQL statement:
+Run this statement:
 
 ```sql
 CREATE TABLE sensor_events (
@@ -113,7 +111,7 @@ This creates a **simulated event stream** with:
 | `'date.past ''15'',''SECONDS'''` | Events timestamped up to 15 seconds in the past |
 | `'rows-per-second' = '2'` | Emit 2 events per second |
 
-The watermark line deserves deep attention:
+The watermark line is significant:
 
 ```sql
 WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
@@ -174,7 +172,7 @@ This is the core trade-off:
 | Larger watermark delay | Better correctness, higher latency |
 | Smaller watermark delay | Lower latency, more late-event risk |
 
-Watermarks are one of the most important mechanisms in event-time stream processing because they determine when Flink believes a window is safe to close.
+Watermarks determine when Flink considers a window safe to close.
 
 ---
 
@@ -188,7 +186,7 @@ Then run:
 SELECT * FROM sensor_events;
 ```
 
-You'll see continuously arriving rows:
+Continuously arriving rows appear:
 
 ![](./99-diagrams/02-hands-on/raw-events-01.png)
 
@@ -242,7 +240,7 @@ For example:
 | `10:00:09.999` | `[10:00:00 → 10:00:10)` |
 | `10:00:10.000` | `[10:00:10 → 10:00:20)` |
 
-Now run a windowed aggregation:
+Run a windowed aggregation:
 
 ```sql
 SELECT
@@ -264,13 +262,9 @@ GROUP BY
     sensor_id;
 ```
 
-- Group sensor events into 10-second event-time windows.
-- Within each window, separately for each sensor_id:
-- count the number of events
-- calculate the average temperature
-- Only output the final result when the watermark says the window is complete.
+This query groups sensor events into 10-second event-time windows. For each window and sensor, it counts events and calculates average temperature. Results are emitted only after the watermark advances past the window boundary.
 
-Press Ctrl+C after observing for 30 seconds.
+Press Ctrl+C after 30 seconds.
 
 
 
@@ -296,13 +290,13 @@ For each event, Flink:
 5. **Emits** the final result when ready
 6. **Cleans up** the window's state
 
-This is far more sophisticated than a SQL database query.
+
 
 
 
 ## Step 6: Observe Window Latency
 
-You may notice that windows do not emit immediately when their end time is reached. Window boundaries and watermark progression are two separate concepts.
+Windows do not emit immediately when their end time is reached. Window boundaries and watermark progression are two separate concepts.
 
 ### Important Distinction
 
@@ -311,7 +305,7 @@ You may notice that windows do not emit immediately when their end time is reach
 | Window size | Defines how events are grouped |
 | Watermark | Determines when Flink believes a window is complete |
 
-Your query defines windows using:
+The query defines windows using:
 
 ```sql
 INTERVAL '10' SECOND
@@ -335,13 +329,7 @@ Suppose Flink has a window:
 06:08:00 → 06:08:10
 ```
 
-Naively, you might expect Flink to emit the result exactly at:
-
-```text
-06:08:10
-```
-
-But this would be incorrect.
+Emitting at the window boundary would be incorrect:
 
 An event with:
 
@@ -479,36 +467,20 @@ Any event arriving with an earlier timestamp may now be considered late.
 | Correctness | Conservative watermark (larger delay) | Higher latency |
 | Lower latency | Aggressive watermark (smaller delay) | More late events |
 
-Most production systems prioritise correctness and accept additional latency.
+Production systems typically prioritise correctness and accept the additional latency.
 
 
 ---
 
 ## Step 7: Compare Event-Time vs Processing-Time Windowing
 
-So far, all previous examples used:
-
-```sql
-event_time
-```
-
-This means Flink grouped events based on when the events actually happened.
-
-Now we will compare that with:
-
-```sql
-processing time
-```
-
-which groups events based on when Flink received and processed them.
-
-This distinction is one of the most important concepts in stream processing.
+The previous examples used `event_time`, meaning Flink grouped events based on when they actually occurred. This step compares that with `PROCTIME()`, which groups events based on when Flink received and processed them.
 
 ---
 
 ### Create a Processing-Time Table
 
-Create a new table:
+Create the table:
 
 ```sql
 CREATE TABLE processing_time_events (
@@ -547,7 +519,7 @@ Assign time when the event is processed by Flink.
 
 ### Create a Processing-Time Window
 
-Now run:
+Run:
 
 ```sql
 SELECT
@@ -586,9 +558,7 @@ No watermarks are involved.
 
 ### The Core Difference
 
-The easiest way to understand this is with a real example. Imagine a mobile phone loses internet connectivity for 30 seconds. The user performs actions during that outage.
-
-Later, the device reconnects and uploads the delayed events.
+Consider a mobile phone that loses connectivity for 30 seconds. Actions taken during the outage are buffered on the device and uploaded after reconnection.
 
 ---
 
@@ -693,18 +663,14 @@ Event-time windows emit based on:
 
 ---
 
-### The Big Picture
+### Summary
 
-Event time and processing time can produce completely different answers from the exact same data stream.
-
-That is why choosing the correct time model is one of the most important architectural decisions in stream processing systems.
+Event time and processing time can produce completely different results from identical data. The time model chosen has a direct impact on correctness, latency, and operational complexity.
 
 
 ## Step 8: Observe Extreme Late Data
 
-Now create a stream where events are much more likely to arrive late.
-
-Create the table:
+Create a stream where events are likely to arrive late:
 
 ```sql
 CREATE TABLE delayed_events (
@@ -849,12 +815,12 @@ At that point, the system must decide what to do:
 | Reprocess later | Critical reporting | More accurate, but delayed |
 | Custom domain logic | Business-specific rules | More application complexity |
 
-In production, you should not treat late data as an edge case. It is a normal part of distributed systems, especially when dealing with mobile apps, IoT devices, retries, Kafka lag, and regional network delays.
+In production, late data should not be treated as an edge case. It is a normal part of distributed systems, particularly in pipelines dealing with mobile apps, IoT devices, retries, Kafka lag, and regional network delays.
 
 
 ## Step 9: Inspect the Flink Web UI
 
-Open another terminal (without exiting SQL CLI) and visit:
+From a separate terminal (without exiting the SQL CLI), open:
 
 ```
 http://localhost:8081
@@ -864,14 +830,14 @@ http://localhost:8081
 
 | Section | What it shows |
 | --- | --- |
-| **Running Jobs** | Your active SQL queries |
-| **Operator Graph** | How your query is distributed |
+| **Running Jobs** | Active SQL queries |
+| **Operator Graph** | How the query is distributed across operators |
 | **Task Execution** | Which nodes are processing data |
 | **Checkpoints** | Fault tolerance snapshots |
-| **Backpressure** | If downstream is slow |
-| **Parallelism** | How many parallel tasks run |
+| **Backpressure** | Whether downstream operators are slow |
+| **Parallelism** | Number of parallel tasks per operator |
 
-**Key insight:** Your SQL query isn't "just SQL", it's a distributed execution graph with multiple tasks coordinating across machines.
+A SQL query submitted to Flink is not executed as a traditional query. It compiles into a distributed execution graph with multiple tasks coordinating across machines.
 
 ---
 
@@ -921,10 +887,10 @@ docker compose down -v
 ```
 
 
-### The Mental Model
+### Core Mental Model
 
-Streaming systems answer one fundamental question:
+Streaming systems exist to answer one question:
 
-> **How do we produce correct results over unreliable, delayed, out-of-order distributed events?**
+> **How does a system produce correct results over unreliable, delayed, out-of-order distributed events?**
 
-Event-time windowing and watermarks are Flink's answer. Flink lets you build systems that are provably correct despite chaos.
+Event-time windowing and watermarks are Flink's answer. Together they allow a distributed system to reason about when events occurred—not just when they arrived—and make principled decisions about correctness, latency, and resource use under uncertainty.

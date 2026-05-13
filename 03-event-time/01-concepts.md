@@ -152,8 +152,6 @@ More precisely, it is a signal that Flink believes events earlier than a given t
 
 **Important:** this is not a guarantee. It is an approximation.
 
-### Mental Model
-
 **Analogy #1:** 
 
 Imagine you are waiting for all the guests to arrive before starting a party game. You don't know when the last guest will show up, but you can set a rule: "Once I haven't seen any new guests for 5 minutes, I'll assume everyone has arrived and start the game." That 5-minute mark is like a watermark in Flink. It allows you to make progress even if some guests arrive late or out of order. 
@@ -238,7 +236,7 @@ Windows turn infinite streams into finite chunks. They allow us to group events 
 
 Without windows, we would have to wait indefinitely for all events to arrive before producing any results. Windows provide a way to make progress and produce meaningful results in a streaming context.
 
-Analogy: Imagine you are counting the number of cars that pass by a street. If you want to know how many cars passed in total, you would have to wait forever because cars keep coming. However, if you count the number of cars that pass every minute, you can produce results every minute without waiting for all cars to arrive. The one-minute intervals are like windows in Flink, allowing you to group events and produce results in a timely manner.
+**Analogy:** Imagine you are counting the number of cars that pass by a street. If you want to know how many cars passed in total, you would have to wait forever because cars keep coming. However, if you count the number of cars that pass every minute, you can produce results every minute without waiting for all cars to arrive. The one-minute intervals are like windows in Flink, allowing you to group events and produce results in a timely manner.
 
 Without windows, a query like this never finishes meaningfully:
 

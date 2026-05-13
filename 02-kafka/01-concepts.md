@@ -12,6 +12,8 @@
 | Replayability   | Re-reading historical events      |
 | Retention       | Controls replay window            |
 | Partition skew  | Uneven workload distribution      |
+| Brokers          | Kafka servers hosting partitions |
+| Cluster          | Distributed system of brokers    |
 | Kafka Connect   | Integration framework             |
 | Kafka vs Flink  | Storage vs processing             |
 
@@ -85,15 +87,41 @@ An event is a record of something that happened. It represents a change in state
 
 The append-only log allows consumers to replay events by simply re-reading from a specific offset. This is crucial for fault tolerance and state recovery in Flink. If a Flink job fails, it can restart and reprocess events from the last checkpointed offset, ensuring no data is lost.
 
-## Immutable Records
-
-In Kafka, once a record is written to a partition, it cannot be modified or deleted. This immutability ensures data integrity and simplifies the design of distributed systems. It also allows Kafka to efficiently manage storage and replication without worrying about concurrent updates.
-
 ## Record
 
-A record is what producers write to Kafka and what consumers read from Kafka. It contains the actual data payload (value) along with an optional key and metadata. It is the basic unit of data in Kafka. It consists of a key, a value, and metadata such as a timestamp and headers. Records are produced by producers and consumed by consumers. Each record is appended to the end of a partition log and assigned an offset. The offset is a unique identifier for the record within its partition and is used by consumers to track their position in the log.
+A record is what producers write to Kafka and what consumers read from Kafka.  It contains the actual data payload (value) along with an optional key and metadata. 
 
-![](./99-diagrams/01-concepts/record-01.png)
+<img src="./99-diagrams/01-concepts/record-01.png" style="display: block; margin: 0 auto; width: 250px;">
+
+**Event Data**
+
+| Field     | Purpose                                   | Example |
+| --------- | ----------------------------------------- | --- |
+| Key       | Determines partition routing and ordering | `user-123` |
+| Value     | Actual business event payload             | `{"order_id": 456, "amount": 99.99}` |
+| Timestamp | Time associated with the event            | `2026-05-12T14:30:00Z` |
+| Headers   | Optional metadata key-value pairs         | `{"source": "web-app"}` |
+
+**Kafka Metadata**
+
+| Field     | Purpose                           | Example |
+| --------- | --------------------------------- | --- |
+| Topic     | Topic storing the record          | `orders` |
+| Partition | Partition containing the record   | `2` |
+| Offset    | Position inside the partition log | `42857` |
+
+Note that the producer supplies the key, value, headers, and timestamp when writing a record to Kafka. However, Kafka itself assigns the topic placement, partition, offset, and replication metadata based on the producer's input and the cluster's configuration.
+
+| Producer supplies     | Kafka assigns        |
+| --------------------- | -------------------- |
+| Key                   | Topic placement      |
+| Value                 | Partition            |
+| Headers               | Offset               |
+| Timestamp (sometimes) | Replication metadata |
+
+### Immutability
+
+In Kafka, once a record is written to a partition, it cannot be modified or deleted. This immutability ensures data integrity and simplifies the design of distributed systems. It also allows Kafka to efficiently manage storage and replication without worrying about concurrent updates.
 
 ## Topics
 
@@ -253,7 +281,7 @@ Too few partitions can lead to bottlenecks because all records are funneled thro
 
 ![](./99-diagrams/01-concepts/brokers-01.png)
 
-A broker is a Kafka server that stores partitions and serves reads and writes for clients. A Kafka cluster is made up of multiple brokers working together.
+A broker is a Kafka **server** that stores partitions and serves reads and writes for clients. A Kafka cluster is made up of multiple brokers working together.
 
 When a topic has multiple partitions, Kafka distributes those partitions across brokers. This is what allows both horizontal scaling and fault tolerance.
 
@@ -271,6 +299,22 @@ So the relationship is:
 - topics are logical streams
 - partitions are the parallel units
 - brokers are the machines that host those partitions.
+
+## Cluster
+
+ A Kafka cluster is the overall distributed system made up of multiple brokers, where each broker is an individual Kafka server responsible for storing and serving data.
+ 
+ Within the cluster, data is organised into topics, which represent logical streams of events such as orders, payments, or user activity.
+ 
+ Each topic is further divided into partitions, which are the fundamental units of storage, scalability, and parallel processing in Kafka.
+ 
+ Partitions are distributed across brokers so that the workload and data storage can be shared throughout the cluster, enabling high throughput and fault tolerance.
+ 
+ Messages, also called records or events, are stored sequentially inside partitions, and Kafka guarantees message ordering only within a single partition.
+ 
+ In practice, topics are logical abstractions, while partitions are the actual distributed data structures physically hosted and replicated across brokers within the Kafka cluster.
+
+![](./99-diagrams/01-concepts/cluster-01.png)
 
 ## Retention
 

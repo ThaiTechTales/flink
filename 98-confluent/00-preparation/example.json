@@ -1,0 +1,20 @@
+{
+  "key": {
+    "customer_id": "CUST-001"
+  },
+  "value": {
+    "header": {
+      "event_id": "EVT-1001",
+      "event_type": "ORDER_CREATED",
+      "event_time": "2026-05-31T10:15:00Z",
+      "source_system": "demo-shop"
+    },
+    "payload": {
+      "customer_id": "CUST-001",
+      "order_id": "ORD-9001",
+      "amount": 129.95,
+      "currency": "AUD",
+      "country": "AU"
+    }
+  }
+}

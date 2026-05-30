@@ -1,0 +1,11 @@
+{
+  "type": "record",
+  "name": "CustomerEventKey",
+  "namespace": "com.thai.learning",
+  "fields": [
+    {
+      "name": "customer_id",
+      "type": "string"
+    }
+  ]
+}
